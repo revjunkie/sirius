@@ -1,0 +1,187 @@
+#
+# NOTE! Don't add files that are generated in specific
+# subdirectories here. Add them in the ".gitignore" file
+# in that subdirectory instead.
+#
+# NOTE! Please use 'git ls-files -i --exclude-standard'
+# command after changing this file, to see if there are
+# any tracked files which get ignored after the change.
+#
+# Normal rules
+#
+.*
+*.o
+*.o.*
+*.a
+*.s
+*.ko
+*.so
+*.so.dbg
+*.mod.c
+*.i
+*.lst
+*.symtypes
+*.order
+modules.builtin
+*.elf
+*.bin
+*.gz
+*.bz2
+*.lzma
+*.xz
+*.lzo
+*.patch
+*.gcno
+#
+# Top-level generic files
+#
+/tags
+/TAGS
+/linux
+/vmlinux
+/vmlinuz
+/System.map
+/Module.markers
+/Module.symvers
+#
+# Debian directory (make deb-pkg)
+#
+/debian/
+#
+# git files that we don't want to ignore even it they are dot-files
+#
+!.gitignore
+!.mailmap
+#
+# Generated include files
+#
+include/config
+include/linux/version.h
+include/generated
+arch/*/include/generated
+#
+# /scripts Generated Files
+#
+scripts/conmakehash
+scripts/kallsyms
+scripts/pnmtologo
+scripts/bin2c
+scripts/unifdef
+scripts/ihex2fw
+scripts/recordmcount
+scripts/docproc
+*.hash.c
+*.lex.c
+*.tab.c
+*.tab.h
+scripts/genksyms/genksyms
+scripts/basic/fixdep
+elfconfig.h
+mk_elfconfig
+modpost
+scripts/selinux/genheaders/genheaders
+scripts/dtc/dtc
+scripts/dtc/dtc-lexer.lex.c
+scripts/dtc/dtc-parser.tab.c
+scripts/dtc/dtc-parser.tab.h
+scripts/kconfig/config*
+scripts/kconfig/*.lex.c
+scripts/kconfig/*.tab.c
+scripts/kconfig/*.tab.h
+scripts/kconfig/zconf.hash.c
+scripts/kconfig/*.moc
+scripts/kconfig/lkc_defs.h
+scripts/kconfig/gconf.glade.h
+scripts/kconfig/*.pot
+scripts/kconfig/*.mo
+scripts/kconfig/conf
+scripts/kconfig/mconf
+scripts/kconfig/nconf
+scripts/kconfig/qconf
+scripts/kconfig/gconf
+scripts/kconfig/kxgettext
+scripts/kconfig/lxdialog/lxdialog
+scripts/selinux/mdp/mdp
+security/selinux/av_permissions.h
+security/selinux/flask.h
+#
+# /usr Generated files
+#
+usr/gen_init_cpio
+usr/initramfs_data.cpio
+usr/initramfs_data.cpio.gz
+usr/initramfs_data.cpio.bz2
+usr/initramfs_data.cpio.lzma
+usr/initramfs_list
+usr/include
+#
+# /arm Generated files
+#
+arch/arm/boot/Image
+arch/arm/boot/zImage
+arch/arm/boot/xipImage
+arch/arm/boot/bootpImage
+arch/arm/boot/uImage
+arch/arm/boot/*.dtb
+arch/arm/boot/zImage-dtb
+arch/arm/boot/compressed/*.lz4
+arch/arm/boot/compressed/ashldi3.S
+arch/arm/boot/compressed/font.c
+arch/arm/mach-msm/smd_rpc_sym.c
+arch/arm/boot/compressed/lib1funcs.S
+arch/arm/boot/compressed/piggy.gzip
+arch/arm/boot/compressed/piggy.lzo
+arch/arm/boot/compressed/piggy.lzma
+arch/arm/boot/compressed/piggy.xzkern
+arch/arm/boot/compressed/vmlinux
+arch/arm/boot/compressed/vmlinux.lds
+arch/arm/kernel/vmlinux.lds
+# borrowed libfdt files
+arch/arm/boot/compressed/fdt.c
+arch/arm/boot/compressed/fdt.h
+arch/arm/boot/compressed/fdt_ro.c
+arch/arm/boot/compressed/fdt_rw.c
+arch/arm/boot/compressed/fdt_wip.c
+arch/arm/boot/compressed/libfdt.h
+arch/arm/boot/compressed/libfdt_internal.h
+# stgit generated dirs
+patches-*
+#
+# /drivers Generated Files
+#
+drivers/tty/vt/consolemap_deftbl.c
+drivers/tty/vt/defkeymap.c
+#
+# /kernel Generated files
+#
+kernel/config_data.h
+kernel/config_data.gz
+kernel/timeconst.h
+#
+# /lib Generated files
+#
+lib/gen_crc32table
+lib/crc32table.h
+!tools/lz4demo/lz4demo
+!firmware/*.bin
+# 
+# Lucid
+#
+/out
+comp
+lucid
+lucid_post_boot
+# quilt's files
+patches
+series
+# cscope files
+cscope.*
+ncscope.*
+# gnu global files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+*.orig
+*~
+\#*#
