@@ -71,7 +71,7 @@
 		somc,driver-ic = <0>;
 		somc,dric-gpio = <&msmgpio 26 0>;
 		somc,mul-channel-scaling = <3>;
-		somc,mdss-phy-size-mm = <64 114>;
+		somc,mdss-phy-size-mm = <62 110>;
 		somc,mdss-dsi-lane-config = [00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75
@@ -246,7 +246,7 @@
 		somc,driver-ic = <0>;
 		somc,dric-gpio = <&msmgpio 26 0>;
 		somc,mul-channel-scaling = <3>;
-		somc,mdss-phy-size-mm = <64 114>;
+		somc,mdss-phy-size-mm = <62 110>;
 		somc,mdss-dsi-lane-config = [00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75
@@ -321,7 +321,7 @@
 		somc,driver-ic = <0>;
 		somc,dric-gpio = <&msmgpio 26 0>;
 		somc,mul-channel-scaling = <3>;
-		somc,mdss-phy-size-mm = <64 114>;
+		somc,mdss-phy-size-mm = <62 110>;
 		somc,mdss-dsi-lane-config = [00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75
 				00 c2 ef 00 00 00 00 01 75

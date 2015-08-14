@@ -94,6 +94,10 @@
 	};
 };
 
+&pm8941_chg {
+	qcom,enable-report-charger-state;
+};
+
 &sdcc1 {
 	qcom,bus-speed-mode = "DDR50", "DDR_1p8v";
 };
