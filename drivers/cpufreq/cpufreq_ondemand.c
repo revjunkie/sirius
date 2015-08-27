@@ -742,6 +742,12 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 			this_dbs_info->rate_mult =
 				dbs_tuners_ins.sampling_down_factor;
 		dbs_freq_increase(policy, policy->max);
+	} else if (max_load < dbs_tuners_ins.touch_load_threshold) {
+		/* No longer fully busy, reset rate_mult */
+		this_dbs_info->rate_mult = 1;
+
+		__cpufreq_driver_target(policy, policy->min,
+					CPUFREQ_RELATION_L);
 	} else {
 		/* Calculate the next frequency proportional to load */
 		unsigned int freq_next, min_f, max_f;
