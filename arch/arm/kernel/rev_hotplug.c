@@ -30,28 +30,26 @@ struct rev_tune
 	unsigned int shift_all;
 	unsigned int shift_one;
 	unsigned int shift_threshold;
-	unsigned int downshift_threshold;
 	unsigned int sample_time;
 	unsigned int min_cpu;
 	unsigned int max_cpu;
-	unsigned int down_diff;
 	unsigned int shift_diff;
+	unsigned int unplug_rate;
 } rev = {
 	.active = 1,
 	.shift_all = 98,
 	.shift_one = 60,
 	.shift_threshold = 2,
-	.downshift_threshold = 10,
 	.sample_time = (HZ / 5),
 	.min_cpu = 1,
 	.max_cpu = 4,
+	.unplug_rate = 2000,
 };
 
 struct cpu_info
 {
 	u64 prev_cpu_idle;
 	u64 prev_cpu_wall;
-	unsigned int load_at_freq;
 };
 
 static DEFINE_PER_CPU(struct cpu_info, rev_info);
@@ -67,12 +65,7 @@ do { 					\
 
 static struct delayed_work hotplug_work;
 static struct workqueue_struct *hotplug_wq;
-
-static void reset_counter(void)
-{
-	rev.down_diff = 0;
-	rev.shift_diff = 0;
-}
+u64 now;
 
 static void __ref plug_cpu(int max_cpu)
 {
@@ -81,18 +74,21 @@ static void __ref plug_cpu(int max_cpu)
 	for_each_possible_cpu(cpu) {
 		if (num_online_cpus() == max_cpu)
 			break;
-		if (!(cpu_online(cpu)))
+		if (!(cpu_online(cpu))) {
 			cpu_up(cpu);
 			REV_INFO("CPU %u online\n", cpu);
+		}
 	}
-	reset_counter();
+	rev.shift_diff = 0;
 }
 
 static void unplug_cpu(void)
 {
 	unsigned int cpu, idle;
 
-	for (cpu = CONFIG_NR_CPUS; cpu > 0; cpu--) {
+	if (ktime_to_ms(ktime_get()) < now + rev.unplug_rate)
+		return;
+	for (cpu = CONFIG_NR_CPUS - 1; cpu > 0; cpu--) {
 		if (!(cpu_online(cpu)))
 			continue;
 			idle = idle_cpu(cpu);
@@ -103,12 +99,12 @@ static void unplug_cpu(void)
 				break;
 			}
 	}
-	reset_counter();
+	now = ktime_to_ms(ktime_get());
 }
 
 static unsigned int get_load(unsigned int cpu)
 {
-	unsigned int wall_time, idle_time, load;
+	unsigned int wall_time, idle_time, load, load_at_freq;
 	u64 cur_wall_time, cur_idle_time;
 	struct cpu_info *pcpu = &per_cpu(rev_info, cpu);
 	struct cpufreq_policy *policy = cpufreq_cpu_get(cpu);
@@ -123,49 +119,44 @@ static unsigned int get_load(unsigned int cpu)
 	if (unlikely(!wall_time || wall_time < idle_time))
 		return 0;
 	load = 100 * (wall_time - idle_time) / wall_time;
-	pcpu->load_at_freq = (load * policy->cur) / policy->cpuinfo.max_freq;
+	load_at_freq = (load * policy->cur) / policy->user_policy.max;
 		REV_INFO("CPU%u: usage: %d cur: %d max: %d\n", cpu, load,
-				policy->cur, policy->cpuinfo.max_freq);
+				policy->cur, policy->user_policy.max);
 
-	return 0;
+	return load_at_freq;
 }
 
 static void  __ref hotplug_decision_work(struct work_struct *work)
 {
 	unsigned int online_cpus, load, up_load, cpu;
 	unsigned int total_load = 0;
-	struct cpu_info *pcpu;
 
 	get_online_cpus();
 	for_each_online_cpu(cpu) {
-		pcpu = &per_cpu(rev_info, cpu);
-		get_load(cpu);
-		total_load += pcpu->load_at_freq;
+		total_load += get_load(cpu);
 		}
 	put_online_cpus();
 	online_cpus = num_online_cpus();
 	load = total_load / online_cpus;
 	up_load = online_cpus > 1 ? rev.shift_one : 30;
+	REV_INFO("rev_hotplug - Load: %d Online CPUs: %d SD: %d\n",
+			load, online_cpus,  rev.shift_diff);
 
 		if (load > up_load && online_cpus < rev.max_cpu) {
 			++rev.shift_diff;
-			rev.down_diff = 0;
 			if (rev.shift_diff > rev.shift_threshold) {
+				now = ktime_to_ms(ktime_get());
 				if (load > rev.shift_all && online_cpus > 1)
-					plug_cpu(rev.max_cpu);			
-				else 
+					plug_cpu(rev.max_cpu);
+				else
 					plug_cpu(online_cpus + 1);
-				}	
+				}
 		} else {
 			rev.shift_diff = 0;
 			if (online_cpus > rev.min_cpu)
-				++rev.down_diff;
-				if (rev.down_diff > rev.downshift_threshold)
-					unplug_cpu();
-	}
+				unplug_cpu();
+				}
 	queue_delayed_work_on(0, hotplug_wq, &hotplug_work, rev.sample_time);
-	REV_INFO("rev_hotplug - Load: %d Online CPUs: %d SD: %d DD: %d\n",
-				load, online_cpus,  rev.shift_diff, rev.down_diff);
 }
 
 /**************SYSFS*******************/
@@ -181,10 +172,10 @@ show_one(active, active);
 show_one(shift_one, shift_one);
 show_one(shift_all, shift_all);
 show_one(shift_threshold, shift_threshold);
-show_one(downshift_threshold, downshift_threshold);
 show_one(sample_time, sample_time);
 show_one(min_cpu, min_cpu);
 show_one(max_cpu, max_cpu);
+show_one(unplug_rate, unplug_rate);
 
 static ssize_t __ref store_active(struct kobject *a, struct attribute *b,
 				const char *buf, size_t count)
@@ -222,10 +213,10 @@ define_one_global_rw(file_name);
 store_one(shift_one, shift_one);
 store_one(shift_all, shift_all);
 store_one(shift_threshold, shift_threshold);
-store_one(downshift_threshold, downshift_threshold);
 store_one(sample_time, sample_time);
 store_one(min_cpu, min_cpu);
 store_one(max_cpu, max_cpu);
+store_one(unplug_rate, unplug_rate);
 
 static struct attribute *rev_hotplug_attributes[] =
 {
@@ -233,10 +224,10 @@ static struct attribute *rev_hotplug_attributes[] =
 	&shift_one.attr,
 	&shift_all.attr,
 	&shift_threshold.attr,
-	&downshift_threshold.attr,
 	&sample_time.attr,
 	&min_cpu.attr,
 	&max_cpu.attr,
+	&unplug_rate.attr,
 	NULL
 };
 
