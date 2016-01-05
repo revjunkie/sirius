@@ -131,11 +131,9 @@ static void  __ref hotplug_decision_work(struct work_struct *work)
 	unsigned int online_cpus, load, up_load, cpu;
 	unsigned int total_load = 0;
 
-	get_online_cpus();
-	for_each_online_cpu(cpu) {
+	for_each_online_cpu(cpu) 
 		total_load += get_load(cpu);
-		}
-	put_online_cpus();
+		
 	online_cpus = num_online_cpus();
 	load = total_load / online_cpus;
 	up_load = online_cpus > 1 ? rev.shift_one : 30;
