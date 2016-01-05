@@ -142,8 +142,8 @@ static void  __ref hotplug_decision_work(struct work_struct *work)
 
 		if (load > up_load && online_cpus < rev.max_cpu) {
 			++rev.shift_diff;
+			now = ktime_to_ms(ktime_get());
 			if (rev.shift_diff > rev.shift_threshold) {
-				now = ktime_to_ms(ktime_get());
 				if (load > rev.shift_all && online_cpus > 1)
 					plug_cpu(rev.max_cpu);
 				else
