@@ -1,18 +1,11 @@
-/* Copyright (c) 2015, Raj Ibrahim <rajibrahim@rocketmail.com>. All rights reserved.
+/*
+ * Rev Hotplug Driver
+ *
+ * Copyright (c) 2015, Raj Ibrahim <rajibrahim@rocketmail.com> 
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
  *
  */
 
@@ -39,7 +32,7 @@ struct rev_tune
 	.active = 1,
 	.shift_all = 98,
 	.shift_one = 60,
-	.shift_threshold = 2,
+	.shift_threshold = 1,
 	.sample_time = (HZ / 5),
 	.min_cpu = 1,
 	.max_cpu = 4,
@@ -128,32 +121,32 @@ static unsigned int get_load(unsigned int cpu)
 
 static void  __ref hotplug_decision_work(struct work_struct *work)
 {
-	unsigned int online_cpus, load, up_load, cpu;
+	unsigned int online_cpus, up_load, cpu;
 	unsigned int total_load = 0;
 
 	for_each_online_cpu(cpu) 
 		total_load += get_load(cpu);
 		
 	online_cpus = num_online_cpus();
-	load = total_load / online_cpus;
+	total_load /= online_cpus;
 	up_load = online_cpus > 1 ? rev.shift_one : 30;
 	REV_INFO("rev_hotplug - Load: %d Online CPUs: %d SD: %d\n",
-			load, online_cpus,  rev.shift_diff);
+			total_load, online_cpus,  rev.shift_diff);
 
-		if (load > up_load && online_cpus < rev.max_cpu) {
+		if (total_load >= up_load && online_cpus < rev.max_cpu) {
 			++rev.shift_diff;
 			now = ktime_to_ms(ktime_get());
 			if (rev.shift_diff > rev.shift_threshold) {
-				if (load > rev.shift_all && online_cpus > 1)
+				if (total_load >= rev.shift_all)
 					plug_cpu(rev.max_cpu);
 				else
 					plug_cpu(online_cpus + 1);
-				}
+			}
 		} else {
 			rev.shift_diff = 0;
 			if (online_cpus > rev.min_cpu)
 				unplug_cpu();
-				}
+			}
 	queue_delayed_work_on(0, hotplug_wq, &hotplug_work, rev.sample_time);
 }
 
@@ -184,13 +177,14 @@ static ssize_t __ref store_active(struct kobject *a, struct attribute *b,
 	if (ret != 1)
 		return -EINVAL;
 	rev.active = input > 1 ? 1 : input;
-		if (rev.active) {
-		queue_delayed_work_on(0, hotplug_wq, &hotplug_work, rev.sample_time);
-		} else {
-			plug_cpu(CONFIG_NR_CPUS);
-			flush_workqueue(hotplug_wq);
-			cancel_delayed_work_sync(&hotplug_work);
-		}
+	if (rev.active) {
+		queue_delayed_work_on(0, hotplug_wq, &hotplug_work, 
+							rev.sample_time);
+	} else {
+		plug_cpu(CONFIG_NR_CPUS);
+		flush_workqueue(hotplug_wq);
+		cancel_delayed_work_sync(&hotplug_work);
+	}
 	return count;
 }
 define_one_global_rw(active);
