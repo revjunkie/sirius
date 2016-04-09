@@ -453,6 +453,17 @@ static void mdss_dsi_panel_switch_mode(struct mdss_panel_data *pdata,
 	return;
 }
 
+static struct bl_dimmer
+{
+	unsigned int dim;
+	unsigned int dim_threshold;
+	unsigned int dim_value;
+} bl = {
+	.dim = 1,
+	.dim_threshold = 200,
+	.dim_value = 128,
+};
+	
 static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 							u32 bl_level)
 {
@@ -475,6 +486,12 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 	if ((bl_level < pdata->panel_info.bl_min) && (bl_level != 0))
 		bl_level = pdata->panel_info.bl_min;
 
+	if (bl.dim) {
+		if ((bl_level < bl.dim_threshold) && 
+				(bl_level > bl.dim_value))
+			bl_level = bl.dim_value;
+	}
+	
 	switch (ctrl_pdata->bklt_ctrl) {
 	case BL_WLED:
 		led_trigger_event(bl_led_trigger, bl_level);
@@ -578,6 +595,60 @@ static ssize_t mdss_dsi_panel_log_interval_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	return scnprintf(buf, PAGE_SIZE, "%i\n", fpsd.log_interval);
+}
+
+static ssize_t bl_dim_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim);
+}
+
+static ssize_t bl_dim_threshold_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim_threshold);
+}
+
+static ssize_t bl_dim_value_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim_value);
+}
+
+static ssize_t bl_dim_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf(buf, "%u", &input);
+	if (ret != 1)
+		return -EINVAL;
+	bl.dim = input;
+	return count;
+}
+
+static ssize_t bl_dim_threshold_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf(buf, "%u", &input);
+	if (ret != 1)
+		return -EINVAL;
+	bl.dim_threshold = input;
+	return count;
+}
+
+static ssize_t bl_dim_value_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	unsigned int input;
+	int ret;
+	ret = sscanf(buf, "%u", &input);
+	if (ret != 1)
+		return -EINVAL;
+	bl.dim_value = input;
+	return count;
 }
 
 static ssize_t mdss_dsi_panel_log_interval_store(struct device *dev,
@@ -1035,6 +1106,12 @@ static struct device_attribute panel_attributes[] = {
 	__ATTR(change_fpks, S_IRUGO|S_IWUSR|S_IWGRP,
 					mdss_dsi_panel_change_fpks_show,
 					mdss_dsi_panel_change_fpks_store),
+	__ATTR(bl_dim, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_show,
+						bl_dim_store),
+	__ATTR(bl_dim_threshold, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_threshold_show,
+						bl_dim_threshold_store),
+	__ATTR(bl_dim_value, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_value_show,
+						bl_dim_value_store),
 };
 
 static int register_attributes(struct device *dev)
