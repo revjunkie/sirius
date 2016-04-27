@@ -70,10 +70,10 @@ static void __ref plug_cpu(int max_cpu)
 	for_each_possible_cpu(cpu) {
 		if (num_online_cpus() == max_cpu)
 			break;
-		if (!(cpu_online(cpu))) {
+		if (cpu_online(cpu))
+			continue; 
 			cpu_up(cpu);
 			REV_INFO("CPU %u online\n", cpu);
-		}
 	}
 }
 
