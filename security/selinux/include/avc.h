@@ -2,15 +2,8 @@
  * Access vector cache interface for object managers.
  *
  * Copyright (C) 2014 Sony Mobile Communications Inc.
- *
  * Author : Stephen Smalley, <sds@epoch.ncsc.mil>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2, as
- * published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
  */
-
 #ifndef _SELINUX_AVC_H_
 #define _SELINUX_AVC_H_
 
@@ -65,9 +58,6 @@ struct selinux_late_audit_data {
 	u32 audited;
 	u32 denied;
 	int result;
-#ifdef CONFIG_SECURITY_SELINUX_AVC_EXTRA_INFO
-	int op_result;
-#endif
 };
 
 /*
@@ -95,10 +85,14 @@ int avc_audit(u32 ssid, u32 tsid,
 	      struct common_audit_data *a, unsigned flags);
 
 #define AVC_STRICT 1 /* Ignore permissive mode. */
+#define AVC_OPERATION_CMD 2	/* ignore command when updating operations */
 int avc_has_perm_noaudit(u32 ssid, u32 tsid,
 			 u16 tclass, u32 requested,
 			 unsigned flags,
 			 struct av_decision *avd);
+
+int avc_has_operation(u32 ssid, u32 tsid, u16 tclass, u32 requested,
+		u16 cmd, struct common_audit_data *ad);
 
 int avc_has_perm_flags(u32 ssid, u32 tsid,
 		       u16 tclass, u32 requested,
@@ -122,6 +116,7 @@ u32 avc_policy_seqno(void);
 #define AVC_CALLBACK_AUDITALLOW_DISABLE	32
 #define AVC_CALLBACK_AUDITDENY_ENABLE	64
 #define AVC_CALLBACK_AUDITDENY_DISABLE	128
+#define AVC_CALLBACK_ADD_OPERATION	256
 
 int avc_add_callback(int (*callback)(u32 event, u32 ssid, u32 tsid,
 				     u16 tclass, u32 perms,

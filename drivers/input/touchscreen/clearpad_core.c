@@ -472,6 +472,7 @@ struct clearpad_wakeup_gesture_t {
 	bool large_panel;
 	unsigned long time_started;
 	u32 timeout_delay;
+	bool suspend_with_enabled;
 };
 
 enum clearpad_hwtest_data_type_e {
@@ -1404,6 +1405,10 @@ static int clearpad_initialize(struct clearpad_t *this)
 	u8 buf[4];
 	struct clearpad_device_info_t *info = &this->device_info;
 
+	rc = clearpad_set_page(this, 0);
+	if (rc)
+		goto exit;
+
 	rc = clearpad_read_pdt(this);
 	if (rc)
 		goto exit;
@@ -2235,7 +2240,7 @@ static int clearpad_set_normal_mode(struct clearpad_t *this)
 
 	dev_dbg(&this->pdev->dev, "%s\n", __func__);
 
-	if (this->wakeup_gesture.enabled) {
+	if (this->wakeup_gesture.suspend_with_enabled) {
 		if (!this->wakeup_gesture.lpm_disabled) {
 			rc = clearpad_vreg_suspend(this, 0);
 			if (rc)
@@ -2369,6 +2374,7 @@ static int clearpad_set_suspend_mode(struct clearpad_t *this)
 			if (rc)
 				goto exit;
 		}
+		this->wakeup_gesture.suspend_with_enabled = true;
 	} else {
 		rc = clearpad_put_bit(SYNF(this, F01_RMI, CTRL, 0x00),
 			DEVICE_CONTROL_SLEEP_MODE_SENSOR_SLEEP,
@@ -2384,6 +2390,7 @@ static int clearpad_set_suspend_mode(struct clearpad_t *this)
 		rc = clearpad_vreg_suspend(this, 1);
 		if (rc)
 			goto exit;
+		this->wakeup_gesture.suspend_with_enabled = false;
 	}
 
 	this->active &= ~SYN_ACTIVE_POWER;

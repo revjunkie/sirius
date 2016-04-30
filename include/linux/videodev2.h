@@ -2,7 +2,7 @@
  *  Video for Linux Two header file
  *
  *  Copyright (C) 1999-2007 the contributors
- *  Copyright (C) 2014 Sony Mobile Communications Inc.
+ *  Copyright (C) 2015 Sony Mobile Communications Inc.
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1066,7 +1066,6 @@ struct v4l2_bt_timings {
 #define V4L2_DV_VSYNC_POS_POL	0x00000001
 #define V4L2_DV_HSYNC_POS_POL	0x00000002
 
-
 /* DV timings */
 struct v4l2_dv_timings {
 	__u32 type;
@@ -1953,6 +1952,17 @@ enum v4l2_mpeg_vidc_video_ltrmode {
 
 #define V4L2_CID_MPEG_VIDC_VIDEO_BUFFER_SIZE_LIMIT \
 		(V4L2_CID_MPEG_MSM_VIDC_BASE + 48)
+
+#define V4L2_CID_MPEG_VIDC_VIDEO_PRIORITY \
+		(V4L2_CID_MPEG_MSM_VIDC_BASE + 73)
+
+enum v4l2_mpeg_vidc_video_priority {
+	V4L2_MPEG_VIDC_VIDEO_PRIORITY_REALTIME_ENABLE = 0,
+	V4L2_MPEG_VIDC_VIDEO_PRIORITY_REALTIME_DISABLE = 1,
+};
+
+#define V4L2_CID_MPEG_VIDC_VIDEO_OPERATING_RATE \
+		(V4L2_CID_MPEG_MSM_VIDC_BASE + 75)
 
 /*  Camera class control IDs */
 #define V4L2_CID_CAMERA_CLASS_BASE 	(V4L2_CTRL_CLASS_CAMERA | 0x900)

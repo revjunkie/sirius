@@ -13,13 +13,14 @@
 
 #include <linux/security.h>
 #include <linux/module.h>
+#include <asm/setup.h>
 #include <linux/fs.h>
 #include <linux/capability.h>
 #include <linux/uaccess.h>
 #include "ric.h"
 
-static bool ric_enable;
 static bool security_state;
+static bool ric_enable = true;
 
 static struct dentry *ric_dir;
 static struct dentry *ric_entry;
@@ -38,8 +39,35 @@ static int sony_ric_setup(char *s)
 
 early_param("oemandroidboot.security", sony_ric_setup);
 
+#define FOTA_BOOT_REASON 0x6f656d46
+#define WARMBOOT_STR "warmboot="
+static bool is_fota_boot(void)
+{
+	char *ptr, buf[11];
+	unsigned long val;
+
+	ptr = strnstr(saved_command_line, WARMBOOT_STR, COMMAND_LINE_SIZE);
+	if (!ptr)
+		return 0;
+
+	ptr += sizeof(WARMBOOT_STR) - 1;
+	strlcpy(buf, ptr, sizeof(buf));
+
+	if (!kstrtoul(buf, 16, &val)) {
+		if (val == FOTA_BOOT_REASON)
+			return 1;
+	}
+
+	return 0;
+}
+
 int sony_ric_enabled(void)
 {
+	if (is_fota_boot()) {
+		pr_debug("RIC: Skipping due to fota boot\n");
+		return 0;
+	}
+
 	return ric_enable;
 }
 EXPORT_SYMBOL(sony_ric_enabled);
@@ -65,6 +93,9 @@ static ssize_t ric_write(struct file *file, const char __user *buf,
 	int ret;
 	unsigned long val;
 
+	if (security_state)
+		return -EPERM;
+
 	if (!capable(CAP_SYS_ADMIN))
 		return -EPERM;
 
@@ -82,10 +113,7 @@ static ssize_t ric_write(struct file *file, const char __user *buf,
 
 	val = !!val;
 
-	if (security_state)
-		ric_enable = security_state;
-	else
-		ric_enable = val;
+	ric_enable = val;
 
 	pr_info("RIC: %s\n", ric_enable ? "enabled" : "disabled");
 
@@ -112,21 +140,24 @@ static const struct file_operations ric_enable_ops = {
 
 static __init int sony_ric_secfs_init(void)
 {
-	ric_dir = securityfs_create_dir("sony_ric", NULL);
-	if (!ric_dir || IS_ERR(ric_dir)) {
-		pr_err("RIC: failed to create sony_ric dir\n");
-		return -EFAULT;
-	}
-
-	ric_entry = securityfs_create_file("enable", S_IRUSR | S_IRGRP,
+	if (!security_state) {
+		ric_dir = securityfs_create_dir("sony_ric", NULL);
+		if (!ric_dir || IS_ERR(ric_dir)) {
+			pr_err("RIC: failed to create sony_ric dir\n");
+			return -EFAULT;
+		}
+		ric_entry = securityfs_create_file("enable", S_IRUSR | S_IRGRP,
 						ric_dir, NULL, &ric_enable_ops);
-	if (!ric_entry || IS_ERR(ric_entry)) {
-		pr_err("RIC: failed to create secfs fuse entry\n");
-		return -EFAULT;
+		if (!ric_entry || IS_ERR(ric_entry)) {
+			pr_err("RIC: failed to create secfs fuse entry\n");
+			return -EFAULT;
+		}
+
+		pr_info("RIC: securityfs entry created\n");
+	} else {
+		ric_enable = security_state;
+		pr_info("RIC: securityfs entry not created\n");
 	}
-
-	pr_info("RIC: securityfs entry created\n");
-
 	return 0;
 }
 

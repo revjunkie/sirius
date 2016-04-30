@@ -109,15 +109,16 @@ static int rdtags_get_xtime_info(void)
 	return 0;
 }
 
-# define NR_LOGBUF_TAGS 3
+# define NR_LOGBUF_TAGS 4
 static int rdtags_get_logbuf_info(void)
 {
 	unsigned long rdtags_logbuf_addr[NR_LOGBUF_TAGS];
 	int i;
 	char *rdtags_logbuf_name[] = {
-		"__log_buf",
-		"log_end",
 		"log_buf_len",
+		"log_first_idx",
+		"log_next_idx",
+		"__log_buf"
 	};
 	char tmp_data[11];
 	/* lookup the virtual address of __log_buf,log_end,log_buf_len,xtime

@@ -1733,7 +1733,7 @@ struct cfg80211_ops {
 
 	int	(*set_channel)(struct wiphy *wiphy, struct net_device *dev,
 			       struct ieee80211_channel *chan,
-			       enum nl80211_channel_type channel_type);
+			       enum nl80211_chan_width chan_width);
 
 	int	(*scan)(struct wiphy *wiphy, struct net_device *dev,
 			struct cfg80211_scan_request *request);
@@ -2130,7 +2130,7 @@ struct wiphy_vendor_command {
 	struct nl80211_vendor_cmd_info info;
 	u32 flags;
 	int (*doit)(struct wiphy *wiphy, struct wireless_dev *wdev,
-		    void *data, int data_len);
+		    const void *data, int data_len);
 };
 
 /**

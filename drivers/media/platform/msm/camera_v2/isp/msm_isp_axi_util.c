@@ -1,5 +1,5 @@
 /* Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
- * Copyright (C) 2014 Sony Mobile Communications Inc.
+ * Copyright (C) 2015 Sony Mobile Communications Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -11,6 +11,9 @@
  * GNU General Public License for more details.
  */
 #include <linux/io.h>
+#if defined(CONFIG_SONY_CAM_V4L2)
+#include <linux/ratelimit.h>
+#endif
 #include <media/v4l2-subdev.h>
 #include <asm/div64.h>
 #include "msm_isp_util.h"
@@ -890,8 +893,13 @@ static int msm_isp_cfg_ping_pong_address(struct vfe_device *vfe_dev,
 		frame_id = vfe_dev->axi_data.src_info[src_intf].frame_id;
 
 	if (frame_id && (stream_info->frame_id >= frame_id)) {
+#if defined(CONFIG_SONY_CAM_V4L2)
+		pr_err_ratelimited("%s: duplicate frame_id, Session frm id %d cur frm id %d\n",
+		__func__, frame_id, stream_info->frame_id);
+#else
 		pr_err("%s: duplicate frame_id, Session frm id %d cur frm id %d\n",
 		__func__, frame_id, stream_info->frame_id);
+#endif
 		vfe_dev->error_info.stream_framedrop_count[stream_idx]++;
 		return rc;
 	}

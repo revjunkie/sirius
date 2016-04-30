@@ -736,7 +736,7 @@ static void dump_common_audit_data_part(struct common_audit_data *ad, char type,
 		break;
 	}
 	case STRING_LSM_AUDIT_DATA_OPRES:
-		snprintf(&string_work[strlen(string_work)], STRING_PART_LEN_MAX-strlen(string_work), " op_res=%d", ad->selinux_audit_data->slad->op_result);
+		snprintf(&string_work[strlen(string_work)], STRING_PART_LEN_MAX-strlen(string_work), " op_res=%d", ad->selinux_audit_data->slad->result);
 		if (ad->tsk)
 			tsk = ad->tsk;
 		if (tsk && tsk->pid) {

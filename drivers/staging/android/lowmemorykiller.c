@@ -45,6 +45,8 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/lmk.h>
 
+#define LMK_COUNT_INFO
+
 #ifdef CONFIG_HIGHMEM
 #define _ZONE ZONE_HIGHMEM
 #else
@@ -67,6 +69,10 @@ static int lowmem_minfree[6] = {
 };
 static int lowmem_minfree_size = 4;
 static int lmk_fast_run = 1;
+
+#ifdef LMK_COUNT_INFO
+static uint32_t lmk_count = 0;
+#endif
 
 static unsigned long lowmem_deathpending_timeout;
 
@@ -353,6 +359,9 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 			     selected->pid, selected->comm,
 			     selected_oom_score_adj, selected_tasksize);
 		lowmem_deathpending_timeout = jiffies + HZ;
+#ifdef LMK_COUNT_INFO
+		lmk_count = (uint32_t)(lmk_count+1);
+#endif
 		send_sig(SIGKILL, selected, 0);
 		set_tsk_thread_flag(selected, TIF_MEMDIE);
 		rem -= selected_tasksize;
@@ -480,7 +489,9 @@ module_param_array_named(minfree, lowmem_minfree, uint, &lowmem_minfree_size,
 			 S_IRUGO | S_IWUSR);
 module_param_named(debug_level, lowmem_debug_level, uint, S_IRUGO | S_IWUSR);
 module_param_named(lmk_fast_run, lmk_fast_run, int, S_IRUGO | S_IWUSR);
-
+#ifdef LMK_COUNT_INFO
+module_param_named(lmk_count, lmk_count, uint, S_IRUGO | S_IWUSR);
+#endif
 module_init(lowmem_init);
 module_exit(lowmem_exit);
 
