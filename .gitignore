@@ -63,6 +63,10 @@ include/config
 include/linux/version.h
 include/generated
 arch/*/include/generated
+arch/arm/crypto/aesbs-core.S
+arch/arm/mach-msm/smd_rpc_sym.c
+comp
+ini
 
 # stgit generated dirs
 patches-*
