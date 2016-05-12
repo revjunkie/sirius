@@ -457,11 +457,36 @@ static struct bl_dimmer
 {
 	unsigned int dim;
 	unsigned int dim_threshold;
-	unsigned int dim_value;
+	unsigned int dim_value[];
 } bl = {
 	.dim = 1,
-	.dim_threshold = 200,
-	.dim_value = 128,
+	.dim_threshold = 255,
+	.dim_value = {80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
+		80, 80, 80, 80, 80, 89, 90, 91, 93, 95,
+		96, 97, 99, 100, 102, 103, 104, 106, 107, 108,
+		109, 110, 112, 114, 115, 117, 119, 121, 123, 125,
+		127, 128, 129, 130, 132, 133, 135, 136, 138, 139,
+		140, 142, 144, 146, 148, 150, 151, 153, 154, 156,
+		157, 158, 159, 161, 163, 164, 165, 167, 168, 170,
+		173, 175, 177, 180, 184, 186, 188, 191, 194, 197, 
+		199, 201, 203, 205, 207, 209, 211, 213, 215, 217,
+		219, 221, 223, 225, 227, 228, 230, 232, 235, 238,
+		240, 243, 246, 249, 252, 255},
 };
 	
 static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
@@ -487,9 +512,8 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 		bl_level = pdata->panel_info.bl_min;
 
 	if (bl.dim) {
-		if ((bl_level < bl.dim_threshold) && 
-				(bl_level > bl.dim_value))
-			bl_level = bl.dim_value;
+		if ((bl_level < bl.dim_threshold) && (bl_level != 0))
+			bl_level = bl.dim_value[bl_level];
 	}
 	
 	switch (ctrl_pdata->bklt_ctrl) {
@@ -603,18 +627,6 @@ static ssize_t bl_dim_show(struct device *dev,
 	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim);
 }
 
-static ssize_t bl_dim_threshold_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim_threshold);
-}
-
-static ssize_t bl_dim_value_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim_value);
-}
-
 static ssize_t bl_dim_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -624,30 +636,6 @@ static ssize_t bl_dim_store(struct device *dev,
 	if (ret != 1)
 		return -EINVAL;
 	bl.dim = input;
-	return count;
-}
-
-static ssize_t bl_dim_threshold_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	unsigned int input;
-	int ret;
-	ret = sscanf(buf, "%u", &input);
-	if (ret != 1)
-		return -EINVAL;
-	bl.dim_threshold = input;
-	return count;
-}
-
-static ssize_t bl_dim_value_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	unsigned int input;
-	int ret;
-	ret = sscanf(buf, "%u", &input);
-	if (ret != 1)
-		return -EINVAL;
-	bl.dim_value = input;
 	return count;
 }
 
@@ -1108,10 +1096,6 @@ static struct device_attribute panel_attributes[] = {
 					mdss_dsi_panel_change_fpks_store),
 	__ATTR(bl_dim, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_show,
 						bl_dim_store),
-	__ATTR(bl_dim_threshold, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_threshold_show,
-						bl_dim_threshold_store),
-	__ATTR(bl_dim_value, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_value_show,
-						bl_dim_value_store),
 };
 
 static int register_attributes(struct device *dev)
