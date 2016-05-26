@@ -28,7 +28,7 @@ static struct rev_tune
 	unsigned int cpu_load[];
 } rev = {
 	.active = 1,
-	.sample_time = HZ / 10,
+	.sample_time = 100,
 	.min_cpu = 1,
 	.max_cpu = CONFIG_NR_CPUS,
 	.unplug_rate = 2000,
@@ -172,7 +172,8 @@ static void __ref hotplug_decision_work(struct work_struct *work)
 					online_cpus > rev.min_cpu)
 		unplug_cpu();
 			
-	schedule_delayed_work_on(0, &hotplug_work, rev.sample_time);
+	schedule_delayed_work_on(0, &hotplug_work,
+				msecs_to_jiffies(rev.sample_time));
 }
 
 /**************SYSFS*******************/
@@ -201,7 +202,8 @@ static ssize_t __ref store_active(struct kobject *a, struct attribute *b,
 		return -EINVAL;
 	rev.active = input > 1 ? 1 : input;
 	if (rev.active) {
-		schedule_delayed_work_on(0, &hotplug_work, rev.sample_time);
+		schedule_delayed_work_on(0, &hotplug_work,
+				msecs_to_jiffies(rev.sample_time));
 	} else {
 		plug_cpu(CONFIG_NR_CPUS);
 		cancel_delayed_work(&hotplug_work);
