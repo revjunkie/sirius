@@ -83,7 +83,7 @@ static void unplug_cpu(void)
 
 	if (ktime_to_ms(ktime_get()) < data.now + rev.unplug_rate)
 		return;
-	for (cpu = CONFIG_NR_CPUS - 1; cpu > 0; cpu--) {
+	for (cpu = CONFIG_NR_CPUS - 1; cpu > rev.min_cpu - 1; cpu--) {
 		if (!(cpu_online(cpu)))
 			continue;
 			idle = idle_cpu(cpu);
