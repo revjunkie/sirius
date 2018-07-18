@@ -453,42 +453,6 @@ static void mdss_dsi_panel_switch_mode(struct mdss_panel_data *pdata,
 	return;
 }
 
-static struct bl_dimmer
-{
-	unsigned int dim;
-	unsigned int dim_threshold;
-	unsigned int dim_value[];
-} bl = {
-	.dim = 1,
-	.dim_threshold = 255,
-	.dim_value = {80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 80, 80, 80, 80, 80,
-		80, 80, 80, 80, 80, 89, 90, 91, 93, 95,
-		96, 97, 99, 100, 102, 103, 104, 106, 107, 108,
-		109, 110, 112, 114, 115, 117, 119, 121, 123, 125,
-		127, 128, 129, 130, 132, 133, 135, 136, 138, 139,
-		140, 142, 144, 146, 148, 150, 151, 153, 154, 156,
-		157, 158, 159, 161, 163, 164, 165, 167, 168, 170,
-		173, 175, 177, 180, 184, 186, 188, 191, 194, 197, 
-		199, 201, 203, 205, 207, 209, 211, 213, 215, 217,
-		219, 221, 223, 225, 227, 228, 230, 232, 235, 238,
-		240, 243, 246, 249, 252, 255},
-};
-	
 static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 							u32 bl_level)
 {
@@ -502,10 +466,6 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	if (bl.dim) {
-		if ((bl_level < bl.dim_threshold) && (bl_level != 0))
-			bl_level = bl.dim_value[bl_level];
-	}
 	/*
 	 * Some backlight controllers specify a minimum duty cycle
 	 * for the backlight brightness. If the brightness is less
@@ -514,7 +474,7 @@ static void mdss_dsi_panel_bl_ctrl(struct mdss_panel_data *pdata,
 
 	if ((bl_level < pdata->panel_info.bl_min) && (bl_level != 0))
 		bl_level = pdata->panel_info.bl_min;
-	
+
 	switch (ctrl_pdata->bklt_ctrl) {
 	case BL_WLED:
 		led_trigger_event(bl_led_trigger, bl_level);
@@ -618,24 +578,6 @@ static ssize_t mdss_dsi_panel_log_interval_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
 	return scnprintf(buf, PAGE_SIZE, "%i\n", fpsd.log_interval);
-}
-
-static ssize_t bl_dim_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	return scnprintf(buf, PAGE_SIZE, "%u\n", bl.dim);
-}
-
-static ssize_t bl_dim_store(struct device *dev,
-		struct device_attribute *attr, const char *buf, size_t count)
-{
-	unsigned int input;
-	int ret;
-	ret = sscanf(buf, "%u", &input);
-	if (ret != 1)
-		return -EINVAL;
-	bl.dim = input;
-	return count;
 }
 
 static ssize_t mdss_dsi_panel_log_interval_store(struct device *dev,
@@ -1093,8 +1035,6 @@ static struct device_attribute panel_attributes[] = {
 	__ATTR(change_fpks, S_IRUGO|S_IWUSR|S_IWGRP,
 					mdss_dsi_panel_change_fpks_show,
 					mdss_dsi_panel_change_fpks_store),
-	__ATTR(bl_dim, S_IRUGO|S_IWUSR|S_IWGRP, bl_dim_show,
-						bl_dim_store),
 };
 
 static int register_attributes(struct device *dev)
