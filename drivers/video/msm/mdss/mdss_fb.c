@@ -68,11 +68,12 @@
 #define MAX_FBI_LIST 32
 /* with a define we avoid modifying fb.h's FB-enum */
 #define FB_EARLY_UNBLANK 0xC0FFEE
-
-#define MDSS_BRIGHT_TO_BL_DIM(out, v) do {\
-			out = (12*v*v+1393*v+3060)/4465;\
+#define BL_LOW (mfd->panel_info->bl_max * 40 / 100)
+#define BL_HIGH (mfd->panel_info->bl_max * 60 / 100)
+#define MDSS_BRIGHT_TO_BL_DIM(out, v, bl_max) do {\
+			out = (v * v + BL_LOW * v + BL_HIGH) / bl_max;\
 			} while (0)
-bool backlight_dimmer = true;
+bool backlight_dimmer = false;
 module_param(backlight_dimmer, bool, 0755);
 
 static struct fb_info *fbi_list[MAX_FBI_LIST];
@@ -330,7 +331,7 @@ static void mdss_fb_set_bl_brightness(struct led_classdev *led_cdev,
 		value = mfd->panel_info->brightness_max;
 
 	if (backlight_dimmer) {
-		MDSS_BRIGHT_TO_BL_DIM(bl_lvl, value);
+		MDSS_BRIGHT_TO_BL_DIM(bl_lvl, value, mfd->panel_info->bl_max);
 	} else {
 		/* This maps android backlight level 0 to 255 into
 		   driver backlight level 0 to bl_max with rounding */
