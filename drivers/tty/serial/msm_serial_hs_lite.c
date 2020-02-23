@@ -1726,7 +1726,7 @@ static int __devinit msm_serial_hsl_probe(struct platform_device *pdev)
 	u32 line;
 	int ret;
 
-	if (pdev->id < 0)
+	if (pdev->id == -1)
 		pdev->id = atomic_inc_return(&msm_serial_hsl_next_id) - 1;
 
 	/* Use line (ttyHSLx) number from pdata or device tree if specified */

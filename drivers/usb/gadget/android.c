@@ -1925,10 +1925,9 @@ static ssize_t mass_storage_inquiry_store(struct device *dev,
 	struct mass_storage_function_config *config = f->config;
 	if (size >= sizeof(config->common->inquiry_string))
 		return -EINVAL;
-	return snprintf(config->common->inquiry_string,
-			sizeof(config->common->inquiry_string),
-			"%28s",
-			buf);
+	if (sscanf(buf, "%28s", config->common->inquiry_string) != 1)
+		return -EINVAL;
+	return size;
 }
 
 static DEVICE_ATTR(inquiry_string, S_IRUGO | S_IWUSR,
